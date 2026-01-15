@@ -912,57 +912,71 @@
 
     <!-- ========== CONTACT SECTION ========== -->
     <section id="contact">
-        <div class="container">
-            <div class="contact-content">
-                <div class="contact-info">
-                    <h2>Get In <span>Touch</span></h2>
-                    <p>I'm currently open to new opportunities, freelance projects, and collaborations. Whether you have a project in mind or just want to connect, feel free to reach out!</p>
-                    
-                    <div class="contact-item">
-                        <div class="contact-icon">
-                            <i class="fas fa-envelope"></i>
-                        </div>
-                        <div>
-                            <h4>Email</h4>
-                            <p>lorenzokingjordan12@gmail.com</p>
-                        </div>
+    <div class="container">
+        <div class="contact-content">
+            <div class="contact-info">
+                <h2>Get In <span>Touch</span></h2>
+                <p>I'm currently open to new opportunities, freelance projects, and collaborations. Whether you have a project in mind or just want to connect, feel free to reach out!</p>
+                
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-envelope"></i>
                     </div>
-                    
-                    <div class="contact-item">
-                        <div class="contact-icon">
-                            <i class="fas fa-map-marker-alt"></i>
-                        </div>
-                        <div>
-                            <h4>Location</h4>
-                            <p>San Jose del Monte City, Bulacan, Philippines</p>
-                        </div>
-                    </div>
-                    
-                    <div class="contact-item">
-                        <div class="contact-icon">
-                            <i class="fas fa-phone"></i>
-                        </div>
-                        <div>
-                            <h4>Phone / WhatsApp</h4>
-                            <p>(+639) 09-515-4472</p>
-                        </div>
+                    <div>
+                        <h4>Email</h4>
+                        <p>lorenzokingjordan12@gmail.com</p>
                     </div>
                 </div>
                 
-                <div class="contact-form">
-                    <form id="contactForm">
-                        <input type="text" placeholder="Your Name" required>
-                        <input type="email" placeholder="Your Email" required>
-                        <input type="text" placeholder="Subject" required>
-                        <textarea placeholder="Your Message" required></textarea>
-                        <button type="submit" class="btn btn-primary" style="width: 100%;">
-                            <i class="fas fa-paper-plane"></i> Send Message
-                        </button>
-                    </form>
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div>
+                        <h4>Location</h4>
+                        <p>San Jose del Monte City, Bulacan, Philippines</p>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                    <div>
+                        <h4>Phone / WhatsApp</h4>
+                        <p>(+639) 09-515-4472</p>
+                    </div>
                 </div>
             </div>
+            
+            <div class="contact-form">
+                <!-- REPLACE xxxxx WITH YOUR FORMSPREE FORM ID -->
+                <form action="https://formspree.io/f/xeeeorqo" method="POST" id="contactForm">
+                    <input type="text" name="name" placeholder="Your Name" required>
+                    <input type="email" name="email" placeholder="Your Email" required>
+                    <input type="text" name="subject" placeholder="Subject" required>
+                    <textarea name="message" placeholder="Your Message" required rows="5"></textarea>
+                    
+                    <!-- Honeypot spam protection -->
+                    <input type="text" name="_gotcha" style="display:none">
+                    
+                    <!-- Formspree confirmation page (optional) -->
+                    <input type="hidden" name="_next" value="https://kaizothecreator.github.io/#contact">
+                    
+                    <!-- Form submission message customization -->
+                    <input type="hidden" name="_subject" value="New message from portfolio - King Jordan Lorenzo">
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%;" id="submitBtn">
+                        <i class="fas fa-paper-plane"></i> Send Message
+                    </button>
+                    
+                    <!-- Status message -->
+                    <div id="form-status" style="display: none; margin-top: 15px; padding: 10px; border-radius: 5px;"></div>
+                </form>
+            </div>
         </div>
-    </section>
+    </div>
+</section>
 
     <!-- ========== FOOTER ========== -->
     <footer>
@@ -992,68 +1006,120 @@
     </footer>
 
     <!-- ========== JAVASCRIPT ========== -->
-    <script>
-        // Mobile Menu Toggle
-        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
-            const navLinks = document.getElementById('navLinks');
-            navLinks.classList.toggle('active');
-            this.innerHTML = navLinks.classList.contains('active') ? 
-                '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+<script>
+    // Mobile Menu Toggle
+    document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+        const navLinks = document.getElementById('navLinks');
+        navLinks.classList.toggle('active');
+        this.innerHTML = navLinks.classList.contains('active') ? 
+            '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+    });
+    
+    // Close mobile menu when clicking a link
+    document.querySelectorAll('.nav-links a').forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                document.getElementById('navLinks').classList.remove('active');
+                document.getElementById('mobileMenuBtn').innerHTML = '<i class="fas fa-bars"></i>';
+            }
         });
+    });
+    
+    // Formspree Form Submission
+    document.getElementById('contactForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        // Close mobile menu when clicking a link
-        document.querySelectorAll('.nav-links a').forEach(link => {
-            link.addEventListener('click', function() {
-                if (window.innerWidth <= 768) {
-                    document.getElementById('navLinks').classList.remove('active');
-                    document.getElementById('mobileMenuBtn').innerHTML = '<i class="fas fa-bars"></i>';
+        const form = this;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalBtnHTML = submitBtn.innerHTML;
+        
+        // Show loading state
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        submitBtn.disabled = true;
+        
+        try {
+            // Send form data to Formspree
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'Accept': 'application/json'
                 }
             });
-        });
-        
-        // Form submission
-        document.getElementById('contactForm').addEventListener('submit', function(e) {
-            e.preventDefault();
             
-            // Get form values
-            const name = this.querySelector('input[type="text"]').value;
-            const email = this.querySelector('input[type="email"]').value;
-            
-            // In a real application, you would send this data to a server
-            // For now, we'll just show a success message
-            alert(`Thank you ${name}! Your message has been sent. I'll get back to you at ${email} soon.`);
-            this.reset();
-        });
-        
-        // Update year in footer
-        document.addEventListener('DOMContentLoaded', function() {
-            const yearElement = document.querySelector('.copyright p');
-            if (yearElement) {
-                const currentYear = new Date().getFullYear();
-                yearElement.innerHTML = yearElement.innerHTML.replace('2024', currentYear);
+            if (response.ok) {
+                // Success
+                alert(`Thank you! Your message has been sent successfully. I'll get back to you soon.`);
+                form.reset();
+            } else {
+                throw new Error('Form submission failed');
             }
             
-            // Animate skill bars
-            document.querySelectorAll('.skill-level').forEach(skill => {
-                const width = skill.getAttribute('data-width');
-                skill.style.setProperty('--skill-width', width);
-            });
-        });
-        
-        // Add scroll animation
-        window.addEventListener('scroll', function() {
-            const elements = document.querySelectorAll('.project-card, .about-text, .profile-img, .contact-item');
+        } catch (error) {
+            // Error handling
+            alert('Oops! Something went wrong. Please email me directly at lorenzokingjordan12@gmail.com');
+            console.error('Form submission error:', error);
             
-            elements.forEach(element => {
-                const position = element.getBoundingClientRect();
-                
-                // If element is in viewport
-                if(position.top < window.innerHeight - 100) {
-                    element.style.opacity = '1';
-                    element.style.transform = 'translateY(0)';
-                }
-            });
+        } finally {
+            // Reset button
+            submitBtn.innerHTML = originalBtnHTML;
+            submitBtn.disabled = false;
+        }
+    });
+    
+    // Update year in footer
+    document.addEventListener('DOMContentLoaded', function() {
+        const yearElement = document.querySelector('.copyright p');
+        if (yearElement) {
+            const currentYear = new Date().getFullYear();
+            yearElement.innerHTML = yearElement.innerHTML.replace('2024', currentYear);
+        }
+        
+        // Animate skill bars
+        document.querySelectorAll('.skill-level').forEach(skill => {
+            const width = skill.getAttribute('data-width');
+            skill.style.width = width;
+            skill.style.setProperty('--skill-width', width);
         });
-    </script>
+    });
+    
+    // Add scroll animation
+    window.addEventListener('scroll', function() {
+        const elements = document.querySelectorAll('.project-card, .about-text, .profile-img, .contact-item');
+        
+        elements.forEach(element => {
+            const position = element.getBoundingClientRect();
+            
+            // If element is in viewport
+            if(position.top < window.innerHeight - 100) {
+                element.style.opacity = '1';
+                element.style.transform = 'translateY(0)';
+            }
+        });
+    });
+    
+    // Skill bar animation on scroll
+    const skillBars = document.querySelectorAll('.skill-level');
+    const observerOptions = {
+        threshold: 0.5
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const skill = entry.target;
+                const width = skill.getAttribute('data-width');
+                skill.style.width = width;
+                skill.style.transition = 'width 1.5s ease-out';
+            }
+        });
+    }, observerOptions);
+    
+    // Observe skill bars
+    skillBars.forEach(skill => {
+        observer.observe(skill);
+    });
+</script>
 </body>
 </html>
+
