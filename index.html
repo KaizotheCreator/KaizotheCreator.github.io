@@ -1092,16 +1092,55 @@
                     </div>
                     
                     <div class="contact-form">
-                        <form id="contactForm">
-                            <input type="text" placeholder="Your Name" required>
-                            <input type="email" placeholder="Your Email" required>
-                            <input type="text" placeholder="Subject" required>
-                            <textarea placeholder="Your Message" required></textarea>
-                            <button type="submit" class="btn btn-primary" style="width: 100%;">
-                                <i class="fas fa-paper-plane"></i> Send Message
-                            </button>
-                        </form>
-                    </div>
+    <form id="contactForm" action="https://formspree.io/f/xeeeorqo" method="POST">
+        <!-- Add these hidden fields for better tracking -->
+        <input type="hidden" name="_subject" value="New Portfolio Contact Message">
+        <input type="hidden" name="_replyto" id="emailField">
+        <input type="hidden" name="_cc" value="lorenzokingjordan12@gmail.com">
+        
+        <!-- Your form fields with proper name attributes -->
+        <input type="text" 
+               name="name" 
+               placeholder="Your Name" 
+               required
+               oninput="document.getElementById('nameField').value = this.value">
+        
+        <input type="email" 
+               name="email" 
+               placeholder="Your Email" 
+               required
+               oninput="document.getElementById('emailField').value = this.value">
+        
+        <input type="text" 
+               name="subject" 
+               placeholder="Subject" 
+               required
+               oninput="document.getElementById('subjectField').value = this.value">
+        
+        <textarea name="message" 
+                  placeholder="Your Message" 
+                  rows="6"
+                  required></textarea>
+        
+        <!-- Honeypot field to prevent spam -->
+        <input type="text" name="_gotcha" style="display:none">
+        
+        <button type="submit" class="btn btn-primary" style="width: 100%;" id="submitBtn">
+            <i class="fas fa-paper-plane"></i> Send Message
+        </button>
+        
+        <!-- Alternative contact option -->
+        <p style="text-align: center; margin-top: 15px; font-size: 0.9rem; color: var(--gray);">
+            Or email me directly at 
+            <a href="mailto:lorenzokingjordan12@gmail.com" style="color: var(--primary);">
+                lorenzokingjordan12@gmail.com
+            </a>
+        </p>
+    </form>
+    
+    <!-- Form response message container -->
+    <div id="formResponse" style="display: none; margin-top: 20px; padding: 15px; border-radius: 8px; text-align: center;"></div>
+</div>
                 </div>
             </div>
         </section>
@@ -1250,24 +1289,141 @@
             });
         });
         
-        // ========== FORM SUBMISSION ==========
-        document.getElementById('contactForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Get form values
-            const name = this.querySelector('input[type="text"]').value;
-            const email = this.querySelector('input[type="email"]').value;
-            
-            // Show success message with animation
+        // ========== FORMSPREE CONTACT FORM ==========
+document.getElementById('contactForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const originalText = submitBtn.innerHTML;
+    const formResponse = document.getElementById('formResponse');
+    
+    // Show loading state
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    submitBtn.disabled = true;
+    
+    try {
+        // Submit form data to Formspree
+        const formData = new FormData(this);
+        
+        // Add extra metadata
+        formData.append('_language', 'en');
+        formData.append('_format', 'plain');
+        
+        const response = await fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        // Hide any previous messages
+        formResponse.style.display = 'none';
+        
+        if (response.ok) {
+            // Success - Formspree accepted the submission
             showModal(
-                "Message Sent Successfully!",
-                `Thank you ${name}! Your message has been sent. I'll get back to you at ${email} soon.`,
+                "✅ Message Sent Successfully!",
+                "Thank you for your message! I'll get back to you within 24-48 hours.",
                 "success"
             );
             
             // Reset form
             this.reset();
+            
+            // Show inline success message (optional)
+            formResponse.style.display = 'block';
+            formResponse.style.background = 'linear-gradient(90deg, var(--primary), var(--accent))';
+            formResponse.style.color = 'white';
+            formResponse.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <strong>Message Sent!</strong> I'll respond soon.
+            `;
+            
+        } else {
+            // Formspree returned an error
+            const errorText = await response.text();
+            console.error('Formspree error:', errorText);
+            
+            showModal(
+                "❌ Couldn't Send Message",
+                "There was an error sending your message. Please try again or email me directly.",
+                "error"
+            );
+            
+            formResponse.style.display = 'block';
+            formResponse.style.background = '#fee2e2';
+            formResponse.style.color = '#dc2626';
+            formResponse.innerHTML = `
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Error:</strong> Please try again or email me directly.
+            `;
+        }
+        
+    } catch (error) {
+        console.error('Network error:', error);
+        
+        showModal(
+            "⚠️ Connection Error",
+            "There seems to be a connection issue. Please check your internet connection and try again.",
+            "warning"
+        );
+        
+        formResponse.style.display = 'block';
+        formResponse.style.background = '#fef3c7';
+        formResponse.style.color = '#d97706';
+        formResponse.innerHTML = `
+            <i class="fas fa-wifi"></i>
+            <strong>Network Error:</strong> Please check your connection.
+        `;
+        
+    } finally {
+        // Reset button state
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+});
+
+// ========== ENHANCED FORM VALIDATION ==========
+function setupFormValidation() {
+    const form = document.getElementById('contactForm');
+    const inputs = form.querySelectorAll('input, textarea');
+    
+    inputs.forEach(input => {
+        // Real-time validation feedback
+        input.addEventListener('blur', function() {
+            if (this.value.trim() === '' && this.hasAttribute('required')) {
+                this.style.borderColor = '#ef4444';
+            } else {
+                this.style.borderColor = '#10b981';
+            }
         });
+        
+        input.addEventListener('input', function() {
+            this.style.borderColor = '#e5e7eb';
+        });
+    });
+}
+
+// ========== DIRECT EMAIL FALLBACK ==========
+function setupEmailFallback() {
+    const emailLink = document.createElement('div');
+    emailLink.innerHTML = `
+        <div style="text-align: center; margin-top: 20px; padding: 15px; background: #f0fdf4; border-radius: 8px; border: 1px solid #10b981;">
+            <p style="margin-bottom: 10px; color: var(--dark);">
+                <i class="fas fa-envelope-open-text"></i>
+                <strong>Prefer to email directly?</strong>
+            </p>
+            <a href="mailto:lorenzokingjordan12@gmail.com?subject=Portfolio Inquiry&body=Hello King Jordan,%0D%0A%0D%0AI visited your portfolio and wanted to connect about..." 
+               class="btn btn-secondary"
+               style="padding: 10px 20px;">
+                <i class="fas fa-paper-plane"></i> Open Email Client
+            </a>
+        </div>
+    `;
+    
+    document.querySelector('.contact-form').appendChild(emailLink);
+}
         
         // ========== COMING SOON BUTTONS ==========
         document.querySelectorAll('.coming-soon-btn').forEach(btn => {
